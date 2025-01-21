@@ -1,0 +1,18 @@
+POST http://127.0.0.1:8000/upload
+Content-Type: multipart/form-data
+
+file=@data/sample_data.csv
+
+###
+
+POST http://127.0.0.1:8000/train
+
+###
+
+POST http://127.0.0.1:8000/predict
+Content-Type: application/json
+
+{
+    "Temperature": 80,
+    "Run_Time": 120
+}

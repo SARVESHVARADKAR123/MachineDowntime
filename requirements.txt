@@ -3,3 +3,6 @@ uvicorn
 pandas
 scikit-learn
 flask
+seaborn
+ipykernel
+flask

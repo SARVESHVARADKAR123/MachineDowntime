@@ -99,13 +99,3 @@ Machine_ID,Temperature,Run_Time,Downtime_Flag
 98,90,103,Yes
 99,76,158,Yes
 100,66,138,Yes
-101,150,5,Yes
-102,10,200,Yes
-103,180,300,Yes
-104,5,10,Yes
-105,200,400,Yes
-106,300,-20,Yes
-107,-50,500,Yes
-108,400,600,Yes
-109,0,700,Yes
-110,250,800,Yes

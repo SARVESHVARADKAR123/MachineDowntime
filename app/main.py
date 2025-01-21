@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from app.utils import save_csv, validate_dataset, load_model, predict_input
+
 from app.model import train_model
 
 app = FastAPI()

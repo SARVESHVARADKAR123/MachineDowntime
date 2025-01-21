@@ -1,43 +1,67 @@
 import os
 import pandas as pd
-import pickle
+from flask import request, jsonify
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.preprocessing import LabelEncoder
+import joblib
 
-DATA_PATH = "./data/uploaded_data.csv"
-MODEL_PATH = "./saved_models/model.pkl"
+DATA_PATH = "data/sample_data.csv"
+MODEL_PATH = "saved_models/downtime_model.pkl"
 
-def save_csv(file):
-    """Save uploaded CSV file."""
-    try:
-        data = pd.read_csv(file)
-        data.to_csv(DATA_PATH, index=False)
-        return True
-    except Exception as e:
-        print(f"Error saving file: {e}")
-        return False
+def preprocess_data():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
 
-def validate_dataset():
-    """Validate if dataset is correct."""
+    file = request.files['file']
+    os.makedirs("data", exist_ok=True)
+    file.save(DATA_PATH)
+    return jsonify({"message": "File uploaded successfully"}), 200
+
+
+def train_model():
     if not os.path.exists(DATA_PATH):
-        return False, "No dataset found. Upload the data first."
+        return jsonify({"error": "No dataset found. Please upload data first."}), 400
+
     data = pd.read_csv(DATA_PATH)
-    required_columns = {"Temperature", "Run_Time", "Downtime_Flag"}
-    if not required_columns.issubset(data.columns):
-        return False, "Dataset must contain 'Temperature', 'Run_Time', and 'Downtime_Flag'."
-    return True, "Dataset is valid."
+    if 'Downtime_Flag' not in data.columns:
+        return jsonify({"error": "Dataset must include 'Downtime_Flag' column."}), 400
 
-def load_model():
-    """Load the trained model."""
+    data['Downtime_Flag'] = LabelEncoder().fit_transform(data['Downtime_Flag'])
+    X = data[['Temperature', 'Run_Time']]
+    y = data['Downtime_Flag']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+
+    os.makedirs("saved_models", exist_ok=True)
+    joblib.dump(model, MODEL_PATH)
+
+    return jsonify({"accuracy": accuracy, "f1_score": f1}), 200
+
+
+def make_prediction():
     if not os.path.exists(MODEL_PATH):
-        return None
-    with open(MODEL_PATH, "rb") as f:
-        return pickle.load(f)
+        return jsonify({"error": "Model not trained yet. Please train the model first."}), 400
 
-def predict_input(model, input_data):
-    """Predict input data using the model."""
-    try:
-        features = [[input_data["Temperature"], input_data["Run_Time"]]]
-        prediction = model.predict(features)
-        confidence = model.predict_proba(features).max()
-        return {"Downtime": "Yes" if prediction[0] == 1 else "No", "Confidence": confidence}
-    except Exception as e:
-        return {"error": str(e)}
+    model = joblib.load(MODEL_PATH)
+    data = request.get_json()
+
+    if not data or 'Temperature' not in data or 'Run_Time' not in data:
+        return jsonify({"error": "Invalid input. Provide 'Temperature' and 'Run_Time'."}), 400
+
+    X_new = pd.DataFrame([data])
+    prediction = model.predict(X_new)
+    confidence = model.predict_proba(X_new).max()
+
+    return jsonify({
+        "Downtime": "Yes" if prediction[0] == 1 else "No",
+        "Confidence": round(confidence, 2)
+    }), 200

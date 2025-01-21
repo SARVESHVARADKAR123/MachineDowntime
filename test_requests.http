@@ -1,18 +1,17 @@
-POST http://127.0.0.1:8000/upload
+# Upload Dataset
+POST http://127.0.0.1:5000/upload
 Content-Type: multipart/form-data
 
 file=@data/sample_data.csv
 
-###
+# Train Model
+POST http://127.0.0.1:5000/train
 
-POST http://127.0.0.1:8000/train
-
-###
-
-POST http://127.0.0.1:8000/predict
+# Predict Downtime
+POST http://127.0.0.1:5000/predict
 Content-Type: application/json
 
 {
-    "Temperature": 80,
-    "Run_Time": 120
+    "Temperature": 85,
+    "Run_Time": 200
 }

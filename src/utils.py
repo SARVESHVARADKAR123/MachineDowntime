@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, f1_score
 from sklearn.preprocessing import LabelEncoder
 import joblib
 
-DATA_PATH = "data/sample_data.csv"
+DATA_PATH = "data/uploaded_data.csv"
 MODEL_PATH = "saved_models/downtime_model.pkl"
 
 def preprocess_data():
